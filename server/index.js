@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
-
+const path = require('path');
 const app = express();
 
 const USERS_FILE = './db/users.json';
@@ -22,9 +22,8 @@ function save(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-// ✅ หน้าแรก (กัน 502)
-app.get("/", (req, res) => {
-  res.send("✅ Moji Auth API is running");
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ✅ สมัครสมาชิก
