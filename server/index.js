@@ -3,16 +3,26 @@ const bodyParser = require('body-parser');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const path = require('path');
+
 const app = express();
 
 const USERS_FILE = './db/users.json';
 const KEYS_FILE = './db/keys.json';
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // ✅ ใช้ Environment Variable
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // จาก Railway Environment
 
+// ✅ Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// 🧩 Helper
+// ✅ เสิร์ฟ static HTML, CSS, JS จาก public/
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ✅ หน้าเริ่มต้น
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// ✅ Helper functions
 function load(file) {
   if (!fs.existsSync(file)) fs.writeFileSync(file, '[]');
   return JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -22,29 +32,28 @@ function save(file, data) {
   fs.writeFileSync(file, JSON.stringify(data, null, 2));
 }
 
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
 // ✅ สมัครสมาชิก
 app.post('/register', (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).send("Missing username or password");
+  if (!username || !password)
+    return res.status(400).send("Missing username or password");
 
   const users = load(USERS_FILE);
-  if (users.find(u => u.username === username)) return res.status(400).send("Username already exists");
+  if (users.find(u => u.username === username))
+    return res.status(400).send("Username already exists");
 
   const token = uuidv4();
   users.push({ username, password, token });
-
   save(USERS_FILE, users);
+
   res.json({ token });
 });
 
 // ✅ ล็อกอิน
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  if (!username || !password) return res.status(400).send("Missing fields");
+  if (!username || !password)
+    return res.status(400).send("Missing fields");
 
   const users = load(USERS_FILE);
   const user = users.find(u => u.username === username && u.password === password);
@@ -53,7 +62,7 @@ app.post('/login', (req, res) => {
   res.json({ token: user.token });
 });
 
-// ✅ ตรวจสอบ license
+// ✅ ตรวจสอบ license สำหรับ dashboard
 app.post('/license-info', (req, res) => {
   const { token } = req.body;
   const users = load(USERS_FILE);
@@ -71,28 +80,30 @@ app.post('/license-info', (req, res) => {
   });
 });
 
-// ✅ Auth Admin ด้วย token
-app.post("/admin-auth", (req, res) => {
+// ✅ ตรวจสอบสิทธิ์ admin
+app.post('/admin-auth', (req, res) => {
   const { token } = req.body;
-  if (!token || token !== ADMIN_TOKEN) {
+  if (!token || token !== ADMIN_TOKEN)
     return res.status(403).send("Unauthorized");
-  }
+
   res.json({ access: true });
 });
 
-// ✅ อ่าน key ทั้งหมด
+// ✅ อ่าน Key ทั้งหมด
 app.get('/keys', (req, res) => {
   const keys = load(KEYS_FILE);
   res.json(keys);
 });
 
-// ✅ สร้าง Key
+// ✅ สร้าง Key ใหม่
 app.post('/create-key', (req, res) => {
   const { key, limit } = req.body;
-  if (!key || !limit) return res.status(400).send("Missing key or limit");
+  if (!key || !limit)
+    return res.status(400).send("Missing key or limit");
 
   const keys = load(KEYS_FILE);
-  if (keys.find(k => k.key === key)) return res.status(409).send("Key exists");
+  if (keys.find(k => k.key === key))
+    return res.status(409).send("Key exists");
 
   keys.push({ key, limit: parseInt(limit), hwid: [] });
   save(KEYS_FILE, keys);
@@ -108,13 +119,13 @@ app.post('/delete-key', (req, res) => {
   res.send("Deleted");
 });
 
-// ✅ อ่าน Users
+// ✅ ดึง Users ทั้งหมด (เฉพาะดู)
 app.get('/users', (req, res) => {
   const users = load(USERS_FILE);
   res.json(users);
 });
 
-// ✅ Reset HWID
+// ✅ รีเซ็ต HWID
 app.post('/reset-hwid', (req, res) => {
   const { username } = req.body;
   const users = load(USERS_FILE);
@@ -126,6 +137,8 @@ app.post('/reset-hwid', (req, res) => {
   res.send("HWID reset");
 });
 
-// ✅ Start Server
+// ✅ Start server
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🌐 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🌐 Server running on http://localhost:${PORT}`);
+});
