@@ -33,18 +33,30 @@
         return;
       }
 
-      const res = await fetch('/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
 
-      const data = await res.json();
-      if (res.ok) {
-        localStorage.setItem('token', data.token);
-        window.location.href = "dashboard.html";
-      } else {
-        status.innerText = `❌ ${data}`;
+        let data;
+        try {
+          data = await res.json();
+        } catch {
+          data = await res.text(); // fallback for plain text error
+        }
+
+        if (res.ok) {
+          localStorage.setItem('token', data.token);
+          window.location.href = "dashboard.html";
+        } else {
+          status.innerText = `❌ ${data}`;
+        }
+
+      } catch (err) {
+        status.innerText = "เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์";
+        console.error("Register error:", err);
       }
     }
   </script>
