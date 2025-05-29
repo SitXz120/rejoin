@@ -70,6 +70,10 @@ app.post('/license-info', (req, res) => {
   const user = users.find(u => u.token === token);
   if (!user) return res.status(404).send("User not found");
 
+  if (!user.key) {
+    return res.json({ key: null, limit: 0, hwids: [] }); // ส่ง blank license
+  }
+
   const key = keys.find(k => k.key === user.key);
   if (!key) return res.status(404).send("Key not found");
 
