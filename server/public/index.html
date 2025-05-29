@@ -14,6 +14,34 @@
       <a href="register.html" class="btn btn-custom btn-lg">สมัครสมาชิก</a>
       <a href="login.html" class="btn btn-outline-light btn-lg">เข้าสู่ระบบ</a>
     </div>
+
+    <!-- ✅ ปุ่ม Admin Panel (แสดงเมื่อ token ตรงกับ ADMIN_TOKEN) -->
+    <div class="text-center mt-4" id="adminPanelBtn" style="display: none;">
+      <a href="admin-dashboard.html" class="btn btn-outline-warning">🔧 Admin Panel</a>
+    </div>
   </div>
+
+  <script>
+    async function checkAdminToken() {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+
+      try {
+        const res = await fetch('/admin-auth', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token })
+        });
+
+        if (res.ok) {
+          document.getElementById("adminPanelBtn").style.display = "block";
+        }
+      } catch (err) {
+        console.error("Error checking admin token:", err);
+      }
+    }
+
+    checkAdminToken();
+  </script>
 </body>
 </html>
