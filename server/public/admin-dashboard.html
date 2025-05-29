@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Dashboard | Moji</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-card fade-in">
+    <h2 class="mb-4 text-center">🔧 Admin Dashboard</h2>
+
+    <div class="mb-3">
+      <h5 class="text-info">Create New Key</h5>
+      <input id="newKey" class="form-control mb-2" placeholder="Enter new key">
+      <input id="newLimit" class="form-control mb-2" type="number" placeholder="Enter device limit">
+      <button class="btn btn-custom w-100" onclick="createKey()">สร้าง Key</button>
+    </div>
+
+    <div class="mb-4">
+      <h5 class="text-info">Available Keys</h5>
+      <ul id="keyList" class="list-group"></ul>
+    </div>
+
+    <div class="mb-3">
+      <h5 class="text-info">Users</h5>
+      <ul id="userList" class="list-group"></ul>
+    </div>
+
+    <button class="btn btn-outline-light w-100 mt-3" onclick="logout()">ออกจากระบบ</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem("adminToken");
+    if (!token) window.location.href = "admin.html";
+
+    async function createKey() {
+      const key = document.getElementById("newKey").value.trim();
+      const limit = document.getElementById("newLimit").value.trim();
+      if (!key || !limit) return alert("กรุณาใส่ Key และ Limit");
+
+      const res = await fetch("/create-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, limit })
+      });
+
+      if (res.ok) {
+        alert("✅ Key ถูกสร้างแล้ว");
+        loadKeys();
+      } else {
+        alert("❌ สร้าง Key ล้มเหลว");
+      }
+    }
+
+    async function loadKeys() {
+      const res = await fetch("/keys");
+      const keys = await res.json();
+      const list = document.getElementById("keyList");
+      list.innerHTML = "";
+      keys.forEach(k => {
+        const item = document.createElement("li");
+        item.className = "list-group-item d-flex justify-content-between align-items-center";
+        item.innerHTML = `
+          <span><strong>${k.key}</strong> (${k.hwid.length}/${k.limit})</span>
+          <button class="btn btn-sm btn-danger" onclick="deleteKey('${k.key}')">ลบ</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function deleteKey(key) {
+      if (!confirm("ต้องการลบ Key นี้จริงหรือไม่?")) return;
+      const res = await fetch("/delete-key", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key })
+      });
+      if (res.ok) loadKeys();
+      else alert("ไม่สามารถลบได้");
+    }
+
+    async function loadUsers() {
+      const res = await fetch("/users");
+      const users = await res.json();
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+      users.forEach(u => {
+        const item = document.createElement("li");
+        item.className = "list-group-item d-flex justify-content-between align-items-center";
+        item.innerHTML = `
+          <span><strong>${u.username}</strong> - HWID: ${u.hwid}</span>
+          <button class="btn btn-sm btn-outline-warning" onclick="resetHWID('${u.username}')">Reset HWID</button>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    async function resetHWID(username) {
+      if (!confirm(`Reset HWID สำหรับ ${username}?`)) return;
+      const res = await fetch("/reset-hwid", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username })
+      });
+      if (res.ok) loadUsers();
+      else alert("ไม่สามารถ Reset ได้");
+    }
+
+    function logout() {
+      localStorage.removeItem("adminToken");
+      window.location.href = "admin.html";
+    }
+
+    loadKeys();
+    loadUsers();
+  </script>
+</body>
+</html>

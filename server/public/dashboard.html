@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard | Moji</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+  <div class="auth-card fade-in">
+    <h2 class="mb-4">Dashboard</h2>
+    <div class="card-dark mb-3">
+      <h4>License Key</h4>
+      <p id="keyValue" class="text-info fw-bold"></p>
+
+      <h5 class="mt-3">Devices (HWID)</h5>
+      <ul id="hwidList" class="list-group list-group-flush"></ul>
+
+      <h6 class="mt-4">Limit Devices</h6>
+      <p id="limitValue" class="fw-bold"></p>
+    </div>
+    <button class="btn btn-custom mt-3 w-100" onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    async function fetchLicenseInfo() {
+      const token = localStorage.getItem('token');
+      if (!token) return location.href = 'login.html';
+
+      const res = await fetch('/license-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+
+      if (!res.ok) {
+        alert("ไม่สามารถโหลดข้อมูล License ได้");
+        return logout();
+      }
+
+      const data = await res.json();
+      document.getElementById('keyValue').innerText = data.key;
+      document.getElementById('limitValue').innerText = `${data.hwid.length} / ${data.limit}`;
+
+      const hwidList = document.getElementById('hwidList');
+      hwidList.innerHTML = '';
+      data.hwid.forEach(h => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        li.innerText = h;
+        hwidList.appendChild(li);
+      });
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      location.href = 'login.html';
+    }
+
+    fetchLicenseInfo();
+  </script>
+</body>
+</html>
