@@ -31,8 +31,21 @@
   </div>
 
   <script>
-    const token = localStorage.getItem("adminToken");
-    if (!token) window.location.href = "admin.html";
+    async function protectAdmin() {
+      const token = localStorage.getItem("token");
+      if (!token) return window.location.href = "index.html";
+
+      const res = await fetch("/admin-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token })
+      });
+
+      if (!res.ok) {
+        alert("❌ ไม่ได้รับสิทธิ์เข้าถึง");
+        return window.location.href = "index.html";
+      }
+    }
 
     async function createKey() {
       const key = document.getElementById("newKey").value.trim();
@@ -89,7 +102,7 @@
         const item = document.createElement("li");
         item.className = "list-group-item d-flex justify-content-between align-items-center";
         item.innerHTML = `
-          <span><strong>${u.username}</strong> - HWID: ${u.hwid}</span>
+          <span><strong>${u.username}</strong> - HWID: ${u.hwid || '-'}</span>
           <button class="btn btn-sm btn-outline-warning" onclick="resetHWID('${u.username}')">Reset HWID</button>
         `;
         list.appendChild(item);
@@ -108,12 +121,15 @@
     }
 
     function logout() {
-      localStorage.removeItem("adminToken");
-      window.location.href = "admin.html";
+      localStorage.removeItem("token");
+      window.location.href = "index.html";
     }
 
-    loadKeys();
-    loadUsers();
+    // ✅ รันหลังโหลดหน้า
+    protectAdmin().then(() => {
+      loadKeys();
+      loadUsers();
+    });
   </script>
 </body>
 </html>
