@@ -9,8 +9,8 @@ const USERS_FILE = './db/users.json';
 const KEYS_FILE = './db/keys.json';
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN; // ✅ ใช้ Environment Variable
 
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-app.use(express.static('public'));
 
 // 🧩 Helper
 function load(file) {
