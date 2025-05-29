@@ -15,8 +15,8 @@
       <a href="login.html" class="btn btn-outline-light btn-lg">เข้าสู่ระบบ</a>
     </div>
 
-    <!-- ✅ ปุ่ม Admin Panel (แสดงเมื่อ token ตรงกับ ADMIN_TOKEN) -->
-    <div class="text-center mt-4" id="adminPanelBtn" style="display: none;">
+    <!-- ✅ ปุ่ม Admin Panel (จะแสดงเฉพาะเมื่อ token เป็น admin) -->
+    <div id="adminPanelBtn" class="mt-4" style="display: none;">
       <a href="admin-dashboard.html" class="btn btn-outline-warning">🔧 Admin Panel</a>
     </div>
   </div>
@@ -37,7 +37,7 @@
           document.getElementById("adminPanelBtn").style.display = "block";
         }
       } catch (err) {
-        console.error("Error checking admin token:", err);
+        console.error("⚠️ Admin token check failed:", err);
       }
     }
 
